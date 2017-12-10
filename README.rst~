@@ -17,13 +17,8 @@ remotenm
      :target: https://pyup.io/repos/github/drtaul/remotenm/
      :alt: Updates
 
-	   
-Collection of scripts to remotely manage a remote rural network.
 
-Currently a collection of scripts used to manage the connection
-of a remote network connected via cell provider and VPN. The remote
-network is expected to be truely remote without anyone local to
-actively help with connection issues etc.
+Collection of scripts to remotely manage a remote rural network
 
 
 * Free software: MIT license

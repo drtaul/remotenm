@@ -1,0 +1,20 @@
+# busy-box ash script for 
+# power cycle the specified relay
+# the relays are mapped to the AC outlets on the power strip
+# shell script for running on mfi power strip
+# This must be copied to the filesystem in
+# the busybox linux system of the power strip.
+relayid=$1
+renewip=0
+if test "$#" -gt 1; then
+    renewip=1
+fi
+sleep 1
+# turn off and on a slot
+echo 0 > /proc/power/$relayid
+sleep 1
+echo 1 > /proc/power/$relayid
+if test $renewip -eq 1; then
+   sleep 2
+   /tmp/iprenew
+fi

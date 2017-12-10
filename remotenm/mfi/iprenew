@@ -1,0 +1,9 @@
+# busy-box ash shell script
+# send signals to restart the udhcp process
+# this will force the renewall of the assigned
+# ip address
+pids=`pidof udhcpc`
+set -- $pids
+/bin/kill -SIGUSR1 $1
+/bin/kill -SIGUSR1 $2
+

@@ -11,13 +11,9 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = [
-    'Click>=6.0',
-    # TODO: put package requirements here
-]
+requirements = ['paramiko']
 
 setup_requirements = [
-    # TODO(drtaul): put setup requirements (distutils extensions, etc.) here
 ]
 
 test_requirements = [
@@ -32,10 +28,11 @@ setup(
     author="Dennis R Taul",
     author_email='dennis.taul@gmail.com',
     url='https://github.com/drtaul/remotenm',
-    packages=find_packages(include=['remotenm']),
+    packages=find_packages(include=['remotenm', 'remotenm.mfi']),
     entry_points={
         'console_scripts': [
-            'remotenm=remotenm.cli:main'
+            'mfipwrc=remotenm.mfi.mfipower:main',
+            'chknetwork=remotenm.mfi.check_network:main'
         ]
     },
     include_package_data=True,

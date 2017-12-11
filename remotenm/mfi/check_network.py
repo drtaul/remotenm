@@ -5,8 +5,15 @@ power cycle the network gateway (modem).
 """
 import os
 import sys
+import argparse
+import time
 import syslog
+import signal
 import requests
+import daemon
+from remotenm.mfi import mfipower
+
+continue_running = True
 
 def connected_to_internet(url='http://www.google.com/', timeout=5):
     try:
@@ -17,13 +24,48 @@ def connected_to_internet(url='http://www.google.com/', timeout=5):
     return False
 
 
-if not connected_to_internet():
-    syslog.syslog("Detected internet connection is down, reboot modem")
-    mfidir = os.path.dirname(__file__)
-    os.chdir(mfidir)
-    import mfipower
-    cmdline = "mfipower.py modem"
-    sys.argv = cmdline.split()
-    mfipower.main()
-else:
-    syslog.syslog("internet connection is ok")
+def checknetwork():
+    if not connected_to_internet():
+        syslog.syslog("Detected internet connection is down, reboot modem")
+        mfidir = os.path.dirname(__file__)
+        os.chdir(mfidir)
+        cmdline = "mfipower.py modem"
+        sys.argv = cmdline.split()
+        mfipower.main()
+    else:
+        syslog.syslog("internet connection is ok")
+
+        
+def daemon_main(sleeptime):
+    global continue_running
+    syslog.syslog("Starting network connection monitor daemon w/ period of %d secs" % sleeptime)
+    while continue_running:
+        time.sleep(sleeptime)
+        if continue_running:
+            checknetwork()
+    sys.exit(0)
+
+
+def programCleanup(signal, frame):
+    global continue_running
+    syslog.syslog("network connection monitor daemon exiting")
+    continue_running = False
+    
+    
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--daemon', action='store_true', default=False)
+    ap.add_argument('--chkperiod', type=int, default=30,
+                    help="period in secs to wakeup and check")
+    args = ap.parse_args()
+    if args.daemon:
+        sighandler_map = { signal.SIGTERM: programCleanup }
+        with daemon.DaemonContext(signal_map=sighandler_map):
+            daemon_main(args.chkperiod)
+    else:
+        checknetwork()
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

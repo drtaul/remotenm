@@ -3,7 +3,9 @@ include CONTRIBUTING.rst
 include HISTORY.rst
 include LICENSE
 include README.rst
-
+include remotenm/mfi/iprenew
+include remotenm/mfi/relaypwroffon
+include remotenm/mfi/chkmodem
 recursive-include tests *
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]

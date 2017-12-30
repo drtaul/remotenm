@@ -15,6 +15,7 @@ from remotenm.mfi import mfipower
 
 continue_running = True
 
+
 def connected_to_internet(url='http://www.google.com/', timeout=5):
     try:
         _ = requests.get(url, timeout=timeout)
@@ -24,25 +25,29 @@ def connected_to_internet(url='http://www.google.com/', timeout=5):
     return False
 
 
-def checknetwork():
+def checknetwork(checkcnter):
     if not connected_to_internet():
         syslog.syslog("Detected internet connection is down, reboot modem")
+        checkcnter = 0
         mfidir = os.path.dirname(__file__)
         os.chdir(mfidir)
         cmdline = "mfipower.py modem"
         sys.argv = cmdline.split()
         mfipower.main()
     else:
-        syslog.syslog("internet connection is ok")
+        if checkcnter == 0:
+            syslog.syslog("internet connection is ok")
+    return checkcnter
 
-        
+
 def daemon_main(sleeptime):
     global continue_running
     syslog.syslog("Starting network connection monitor daemon w/ period of %d secs" % sleeptime)
     while continue_running:
+        callcounter = 0
         time.sleep(sleeptime)
         if continue_running:
-            checknetwork()
+            callcounter = checknetwork(callcounter) % 100
     sys.exit(0)
 
 

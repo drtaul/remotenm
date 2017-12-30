@@ -37,6 +37,7 @@ def checknetwork(checkcnter):
     else:
         if checkcnter == 0:
             syslog.syslog("internet connection is ok")
+        chechcntr += 1
     return checkcnter
 
 

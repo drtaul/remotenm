@@ -8,20 +8,65 @@ import sys
 import argparse
 import time
 import syslog
+import subprocess
 import signal
 import requests
+from urlparse import urlparse
 import daemon
 from remotenm.mfi import mfipower
 
 continue_running = True
+MODEM_IP='192.168.5.1'
+TEST_URL='http://www.google.com/'
+
+def pingurl(rhost):
+    try:
+        output = subprocess.check_output("ping -{} 1 {}".format('c', rhost), shell=True)
+
+    except Exception, e:
+        return False
+
+    return True
 
 
-def connected_to_internet(url='http://www.google.com/', timeout=5):
+def wait_for_modem(modemip='192.168.1.5', mxwait=600):
+    syslog.syslog("Waiting for modem at %s to ping" % modemip)
+    waitim = 0
+    while not pingurl(modemip):
+        time.sleep(15)
+        waitim += 15
+        if waitim > mxwait:
+            syslog.syslog("Mx time exceeded on Waiting for modem at %s to ping" % modemip)
+            break
+
+
+def wait_for_url(url=TEST_URL, mxwait=600):
+    netloc = urlparse(url).netloc
+    if len(netloc) > 0:
+        url=netloc
+    syslog.syslog("Waiting for URL at %s to ping" % url)
+    waitim = 0
+    while not pingurl(url):
+        time.sleep(15)
+        waitim += 15
+        if waitim > mxwait:
+            syslog.syslog("Mx time exceeded on Waiting for URL at %s to ping" % modemip)
+            break
+
+
+def connected_to_internet(url=TEST_URL, gwip=MODEM_IP, timeout=5):
+    if gwip is not None:
+        if not pingurl(gwip):
+            return False
+    netloc = urlparse(url).netloc
+    if len(netloc) > 0:
+        if not pingurl(netloc):
+            return False
     try:
         _ = requests.get(url, timeout=timeout)
         return True
     except requests.ConnectionError:
-        print("No internet connection available.")
+        syslog.syslog("Connection Error: No internet connection available.")
     return False
 
 
@@ -34,10 +79,14 @@ def checknetwork(checkcnter):
         cmdline = "mfipower.py modem"
         sys.argv = cmdline.split()
         mfipower.main()
+        syslog.syslog("Modem power cycle completed")
+        wait_for_modem()
+        wait_for_url()
+        syslog.syslog("Attempt at network modem recovery completed")
     else:
         if checkcnter == 0:
             syslog.syslog("internet connection is ok")
-        chechcntr += 1
+        checkcnter += 1
     return checkcnter
 
 
@@ -69,7 +118,8 @@ def main():
         with daemon.DaemonContext(signal_map=sighandler_map):
             daemon_main(args.chkperiod)
     else:
-        checknetwork()
+        checknetwork(0)
+    syslog.syslog("Exiting network connection checker")
     return 0
 
 

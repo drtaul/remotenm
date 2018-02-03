@@ -19,9 +19,9 @@ continue_running = True
 MODEM_IP='192.168.5.1'
 TEST_URL='http://www.google.com/'
 
-def pingurl(rhost):
+def pingurl(rhost, timeout=3):
     try:
-        output = subprocess.check_output("ping -{} 1 {}".format('c', rhost), shell=True)
+        output = subprocess.check_output("ping -W {} -{} 1 {}".format(timeout, 'c', rhost), shell=True)
 
     except Exception, e:
         return False
@@ -29,29 +29,32 @@ def pingurl(rhost):
     return True
 
 
-def wait_for_modem(modemip='192.168.1.5', mxwait=600):
+def wait_for_modem(modemip=MODEM_IP, mxwait=600, sleeptm=15):
     syslog.syslog("Waiting for modem at %s to ping" % modemip)
     waitim = 0
     while not pingurl(modemip):
-        time.sleep(15)
-        waitim += 15
+        time.sleep(sleeptm)
+        waitim += sleeptm
         if waitim > mxwait:
             syslog.syslog("Mx time exceeded on Waiting for modem at %s to ping" % modemip)
-            break
+            return False
 
+    return True
+        
 
-def wait_for_url(url=TEST_URL, mxwait=600):
+def wait_for_url(url=TEST_URL, mxwait=600, sleeptm=15):
     netloc = urlparse(url).netloc
     if len(netloc) > 0:
         url=netloc
     syslog.syslog("Waiting for URL at %s to ping" % url)
     waitim = 0
     while not pingurl(url):
-        time.sleep(15)
-        waitim += 15
+        time.sleep(sleeptm)
+        waitim += sleeptm
         if waitim > mxwait:
             syslog.syslog("Mx time exceeded on Waiting for URL at %s to ping" % modemip)
-            break
+            return False
+    return True
 
 
 def connected_to_internet(url=TEST_URL, gwip=MODEM_IP, timeout=5):
@@ -80,8 +83,8 @@ def checknetwork(checkcnter):
         sys.argv = cmdline.split()
         mfipower.main()
         syslog.syslog("Modem power cycle completed")
-        wait_for_modem()
-        wait_for_url()
+        if wait_for_modem():
+            wait_for_url()
         syslog.syslog("Attempt at network modem recovery completed")
     else:
         if checkcnter == 0:
@@ -93,8 +96,8 @@ def checknetwork(checkcnter):
 def daemon_main(sleeptime):
     global continue_running
     syslog.syslog("Starting network connection monitor daemon w/ period of %d secs" % sleeptime)
+    callcounter = 0
     while continue_running:
-        callcounter = 0
         time.sleep(sleeptime)
         if continue_running:
             callcounter = checknetwork(callcounter) % 100

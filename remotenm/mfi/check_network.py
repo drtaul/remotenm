@@ -81,11 +81,14 @@ def checknetwork(checkcnter):
         os.chdir(mfidir)
         cmdline = "mfipower.py modem"
         sys.argv = cmdline.split()
-        mfipower.main()
-        syslog.syslog("Modem power cycle completed")
-        if wait_for_modem():
-            wait_for_url()
-        syslog.syslog("Attempt at network modem recovery completed")
+        rc = mfipower.main()
+        if rc != 0:
+            syslog.syslog("Failed to access mfi power strip, abort this attempt")
+        else:
+            syslog.syslog("Modem power cycle request submitted")
+            if wait_for_modem():
+                wait_for_url()
+            syslog.syslog("Attempt at network modem recovery completed")
     else:
         if checkcnter == 0:
             syslog.syslog("internet connection is ok")

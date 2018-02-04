@@ -53,6 +53,7 @@ def main():
         print "Failed to connect"
         return 1
 
+    print "Connected to mfi power strip"
     install_relaycmd(client)
     install_iprenew(client)
     

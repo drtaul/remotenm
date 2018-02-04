@@ -71,14 +71,21 @@ def install_iprenew(client):
     local_fn = os.path.join(os.path.dirname(__file__), rnewnam)
     install_cmd(client, local_fn, iprpath)
     
-# enable "gssapi-with-mic" authentication,
-# if supported by your python installation
-UseGSSAPI = paramiko.GSS_AUTH_AVAILABLE
-# enable "gssapi-kex" key exchange,
-# if supported by your python installation
-DoGSSAPIKeyExchange = paramiko.GSS_AUTH_AVAILABLE
+# The mfi busybox uses older gssapi authentication
+#   - initially able to use the following with additional
+#     security packages however lots of problems
+#  Finally determined the option 'look_for_keys = False'
+#  simply uses the user + passwd 
+## enable "gssapi-with-mic" authentication,
+## if supported by your python installation
+#UseGSSAPI = paramiko.GSS_AUTH_AVAILABLE
+## enable "gssapi-kex" key exchange,
+## if supported by your python installation
+#DoGSSAPIKeyExchange = paramiko.GSS_AUTH_AVAILABLE
+DoGSSAPIKeyExchange = False
+UseGSSAPI = False
 
-def mficonnect(hname=None):
+def mficonnect(hname=None, to=5):
     global _HOSTNAME, _USERNAME, _PASSWORD, port
     hostname = _HOSTNAME
     username = _USERNAME
@@ -92,15 +99,15 @@ def mficonnect(hname=None):
         client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.WarningPolicy())
         if not UseGSSAPI and not DoGSSAPIKeyExchange:
-            client.connect(hostname, port, username, password)
+            client.connect(hostname, port, username, password, timeout=to, look_for_keys=False)
         else:
             try:
                 client.connect(hostname, port, username, gss_auth=UseGSSAPI,
-                               gss_kex=DoGSSAPIKeyExchange)
+                               gss_kex=DoGSSAPIKeyExchange, timeout=to)
             except Exception:
                 # traceback.print_exc()
                 password = getpass.getpass('Password for %s@%s: ' % (username, hostname))
-                client.connect(hostname, port, username, password)
+                client.connect(hostname, port, username, password, timeout=to)
     except Exception as e:
         print('*** Caught exception: %s: %s' % (e.__class__, e))
         traceback.print_exc()
@@ -109,5 +116,6 @@ def mficonnect(hname=None):
             client = None
         except:
             pass
-        sys.exit(1)
     return client
+
+

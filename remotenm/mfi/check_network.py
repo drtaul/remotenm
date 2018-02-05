@@ -104,7 +104,8 @@ def daemon_main(sleeptime):
         time.sleep(sleeptime)
         if continue_running:
             callcounter = checknetwork(callcounter) % 100
-    sys.exit(0)
+    syslog.syslog("Daemon exiting")
+    sys.exit(1)
 
 
 def programCleanup(signal, frame):
@@ -114,19 +115,21 @@ def programCleanup(signal, frame):
     
     
 def main():
+    rc = 0
     ap = argparse.ArgumentParser()
     ap.add_argument('--daemon', action='store_true', default=False)
     ap.add_argument('--chkperiod', type=int, default=30,
                     help="period in secs to wakeup and check")
     args = ap.parse_args()
     if args.daemon:
+        rc = 1
         sighandler_map = { signal.SIGTERM: programCleanup }
         with daemon.DaemonContext(signal_map=sighandler_map):
             daemon_main(args.chkperiod)
     else:
         checknetwork(0)
     syslog.syslog("Exiting network connection checker")
-    return 0
+    return rc
 
 
 if __name__ == '__main__':

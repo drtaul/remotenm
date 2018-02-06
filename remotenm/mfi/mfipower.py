@@ -29,6 +29,7 @@ sending SIGUSR1 signal to udhcpc process.
 """
 import sys
 import argparse
+import syslog
 from mfi import *
 
 # dictionary to name the outlets on the power strip
@@ -47,13 +48,13 @@ def main():
     if ipaddr is None:
         return 1
 
-    print "Connecting to mfi(%s)" % ipaddr
+    syslog.syslog("Connecting to mfi(%s)" % ipaddr)
     client = mficonnect()
     if client is None:
-        print "Failed to connect"
+        syslog.syslog("Failed to connect to mfi power strip")
         return 1
 
-    print "Connected to mfi power strip"
+    syslog.syslog("Connected to mfi power strip")
     install_relaycmd(client)
     install_iprenew(client)
     
@@ -68,8 +69,9 @@ def main():
     #
     # Disconnect from the host
     #
-    print "Command done, closing SSH connection"
+    syslog.syslog("Command done, closing connection to mfi power strip")
     client.close()
+    return 0
 
 if __name__ == '__main__':
     sys.exit(main())

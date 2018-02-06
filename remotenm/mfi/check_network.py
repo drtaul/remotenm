@@ -38,7 +38,7 @@ def wait_for_modem(modemip=MODEM_IP, mxwait=600, sleeptm=15):
         if waitim > mxwait:
             syslog.syslog("Mx time exceeded on Waiting for modem at %s to ping" % modemip)
             return False
-
+    syslog.syslog("successfully pinged modem")
     return True
         
 
@@ -76,19 +76,27 @@ def connected_to_internet(url=TEST_URL, gwip=MODEM_IP, timeout=5):
 def checknetwork(checkcnter):
     if not connected_to_internet():
         syslog.syslog("Detected internet connection is down, reboot modem")
-        checkcnter = 0
-        mfidir = os.path.dirname(__file__)
-        os.chdir(mfidir)
-        cmdline = "mfipower.py modem"
-        sys.argv = cmdline.split()
-        rc = mfipower.main()
-        if rc != 0:
-            syslog.syslog("Failed to access mfi power strip, abort this attempt")
+        if wait_for_modem():
+            checkcnter = 0
+            mfidir = os.path.dirname(__file__)
+            os.chdir(mfidir)
+            cmdline = "mfipower.py modem"
+            sys.argv = cmdline.split()
+            rc = mfipower.main()
+            if rc != 0:
+                syslog.syslog("Failed to access mfi power strip, abort this attempt")
+            else:
+                syslog.syslog("Modem power cycle request submitted")
+                if wait_for_modem():
+                    if wait_for_url():
+                        syslog.syslog("Attempt at network modem recovery completed")
+                    else:
+                        syslog.syslog("Failed network modem recovery")
+                else:
+                    syslog.syslog("Modem not available?")
         else:
-            syslog.syslog("Modem power cycle request submitted")
-            if wait_for_modem():
-                wait_for_url()
-            syslog.syslog("Attempt at network modem recovery completed")
+            syslog.syslog("Modem does not repond to ping")
+                    
     else:
         if checkcnter == 0:
             syslog.syslog("internet connection is ok")

@@ -85,6 +85,17 @@ def install_iprenew(client):
 DoGSSAPIKeyExchange = False
 UseGSSAPI = False
 
+def test_mficonnect(hname=None, to=5):
+    client = mficonnect(hname, to)
+    if client is not None:
+        print "mfi power strip seems ok"
+        client.close()
+        return 0
+    else:
+        print "mfi power strip is not available"
+        return 1
+
+
 def mficonnect(hname=None, to=5):
     global _HOSTNAME, _USERNAME, _PASSWORD, port
     hostname = _HOSTNAME
@@ -118,4 +129,6 @@ def mficonnect(hname=None, to=5):
             pass
     return client
 
+if __name__ == '__main__':
+    test_mficonnect()
 

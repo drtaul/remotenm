@@ -24,6 +24,7 @@ def pingurl(rhost, timeout=3):
         output = subprocess.check_output("ping -W {} -{} 1 {}".format(timeout, 'c', rhost), shell=True)
 
     except Exception, e:
+        syslog.syslog("Failed to ping host %s" % rhost)
         return False
 
     return True
@@ -65,12 +66,12 @@ def connected_to_internet(url=TEST_URL, gwip=MODEM_IP, timeout=5):
     if len(netloc) > 0:
         if not pingurl(netloc):
             return False
-    try:
-        _ = requests.get(url, timeout=timeout)
-        return True
-    except requests.ConnectionError:
-        syslog.syslog("Connection Error: No internet connection available.")
-    return False
+    #try:
+    #    _ = requests.get(url, timeout=timeout)
+    #    return True
+    #except requests.ConnectionError:
+    #    syslog.syslog("Connection Error: No internet connection available.")
+    return True
 
 
 def checknetwork(checkcnter):
@@ -83,6 +84,7 @@ def checknetwork(checkcnter):
             cmdline = "mfipower.py modem"
             sys.argv = cmdline.split()
             rc = mfipower.main()
+            time.sleep(10)
             if rc != 0:
                 syslog.syslog("Failed to access mfi power strip, abort this attempt")
             else:

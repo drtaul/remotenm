@@ -17,7 +17,8 @@ from remotenm.mfi import mfipower
 
 continue_running = True
 MODEM_IP='192.168.5.1'
-TEST_URL='http://www.google.com/'
+# TEST_URL='http://www.google.com/'
+TEST_URL='fvfvpn.privatedns.org'
 
 def pingurl(rhost, timeout=3):
     try:
@@ -39,6 +40,8 @@ def wait_for_modem(modemip=MODEM_IP, mxwait=600, sleeptm=15):
         if waitim > mxwait:
             syslog.syslog("Mx time exceeded on Waiting for modem at %s to ping" % modemip)
             return False
+        syslog.syslog("Failed to ping modem")
+
     syslog.syslog("successfully pinged modem")
     return True
         
@@ -53,8 +56,9 @@ def wait_for_url(url=TEST_URL, mxwait=600, sleeptm=15):
         time.sleep(sleeptm)
         waitim += sleeptm
         if waitim > mxwait:
-            syslog.syslog("Mx time exceeded on Waiting for URL at %s to ping" % modemip)
+            syslog.syslog("Mx time exceeded on Waiting for URL at %s to ping" % url)
             return False
+        syslog.syslog("Failed to ping URL:%s", url)
     return True
 
 

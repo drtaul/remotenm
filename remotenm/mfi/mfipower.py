@@ -33,7 +33,7 @@ import syslog
 from mfi import *
 
 # dictionary to name the outlets on the power strip
-outlets = { 'modem': 5, 'router': 1 }
+outlets = { 'modem': 5, 'router': 1, 'fans': 6 }
 values = { 'cycle': 0, 'off': 1, 'on': 2 }
 
 def main():

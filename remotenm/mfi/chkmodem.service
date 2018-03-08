@@ -1,0 +1,14 @@
+[Unit]
+Description=Network Connection Monitor
+SourcePath=/etc/init.d/chkmodem
+
+[Service]
+Type=forking
+ExecStart=/etc/init.d/chkmodem start
+ExecStop=/etc/init.d/chkmodem stop
+IgnoreSIGPIPE=false
+KillMode=process
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
